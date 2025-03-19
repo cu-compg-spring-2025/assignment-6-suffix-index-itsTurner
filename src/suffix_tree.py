@@ -63,8 +63,32 @@ def build_suffix_tree(text):
     return nodes
 
 def search_tree(suffix_tree, P):
-    # Your code here
-    return None
+    P += "$"
+    
+    n = 0
+    i = 0
+
+    while i < len(P):
+        j = 0
+
+        sub = suffix_tree[n][SUB]
+
+        while (i + j) < len(P) and j < len(sub) and P[i + j] == sub[j]:
+            j += 1
+        
+        i += j
+        if j == len(sub):
+            if i == len(P):
+                # print(f'Complete match on {P}')
+                return i - 1
+            else:
+                # print(f'Match {P[:i]} with {sub}')
+                if P[i] in suffix_tree[n][CHILDREN]:
+                    n = suffix_tree[n][CHILDREN][P[i]]
+                else:
+                    return i
+        else:
+            return i
 
 def main():
     args = get_args()
@@ -77,8 +101,13 @@ def main():
         reference = utils.read_fasta(args.reference)
         T = reference[0][1]
 
+    print('Extracted file')
+
     tree = build_suffix_tree(T)
-        
+    # print(tree)
+
+    print('Tree built')
+    
     if args.query:
         for query in args.query:
             match_len = search_tree(tree, query)
