@@ -19,63 +19,68 @@ def get_args():
 
     return parser.parse_args()
 
-SUB = 0
-CHILDREN = 1
+class SuffixTrie():
+    __algorithm_name__ = 'Suffix trie'
+    SUB = 0
+    CHILDREN = 1
 
-def add_suffix(nodes, suf):
-    n = 0
-    i = 0
-    while i < len(suf):
-        b = suf[i] 
-        children = nodes[n][CHILDREN]
-        if b not in children:
-            n2 = len(nodes)
-            nodes.append([suf[i], {}])
-            nodes[n][CHILDREN][b] = n2
-            i += 1
-        else:
-            n2 = children[b]
+    def __init__(self, s: str = None):
+        self.s, self.trie = None, None
+        if s is not None:
+            self.setup(s)
 
-        n = n2
-
-def build_suffix_trie(s):
-    s += "$"
-
-    nodes = [ ['', {}] ]
-
-    for i in reversed(range(len(s))):
-        add_suffix(nodes, s[i:])
+    def setup(self, s):
+        self.s = s
+        self.trie = self.build_suffix_trie(self.s)
     
-    return nodes
+    def align(self, query):
+        return self.search_trie(self.trie, query)
 
-def search_trie(trie, pattern):
-    P = pattern
-    P += "$"
-    
-    n = 0
-    i = 0
+    def build_suffix_trie(self, s):
+        s += "$"
 
-    while i < len(P):
-        j = 0
+        nodes = [ ['', {}] ]
 
-        sub = trie[n][SUB]
-
-        if (i + j) < len(P) and j < len(sub) and P[i + j] == sub[j]:
-            j += 1
-        
-        i += j
-        if j == len(sub):
-            if i == len(P):
-                # print(f'Complete match on {P}')
-                return i - 1
-            else:
-                # print(f'Match {P[:i]} with {sub}')
-                if P[i] in trie[n][CHILDREN]:
-                    n = trie[n][CHILDREN][P[i]]
+        for i in reversed(range(len(s))):
+            suf = s[i:]
+            node_index, char_index = 0, 0
+            while char_index < len(suf):
+                curr_char = suf[char_index]
+                if curr_char not in nodes[node_index][self.CHILDREN]:
+                    new_node_index = len(nodes)
+                    nodes.append([curr_char, {}])
+                    nodes[node_index][self.CHILDREN][curr_char] = new_node_index
+                    node_index = new_node_index
                 else:
-                    return i
-        else:
-            return i
+                    node_index = nodes[node_index][self.CHILDREN][curr_char]
+                char_index += 1
+        
+        return nodes
+
+    def search_trie(self, trie, pattern):
+        P = pattern
+        P += "$"
+        
+        node_index, pattern_index = 0, 0
+        while pattern_index < len(P):
+            substring_index = 0
+
+            node_substring = trie[node_index][self.SUB]
+
+            if (pattern_index + substring_index) < len(P) and substring_index < len(node_substring) and P[pattern_index + substring_index] == node_substring[substring_index]:
+                substring_index += 1
+            
+            pattern_index += substring_index
+            if substring_index == len(node_substring):
+                if pattern_index == len(P): # Complete match
+                    return pattern_index - 1
+                else: # Pattern isn't fully matched yet
+                    if P[pattern_index] in trie[node_index][self.CHILDREN]:
+                        node_index = trie[node_index][self.CHILDREN][P[pattern_index]]
+                    else:
+                        return pattern_index
+            else:
+                return pattern_index
 
 def main():
     args = get_args()
@@ -90,14 +95,15 @@ def main():
 
     print('Extracted file')
 
-    trie = build_suffix_trie(T)
-    # print(trie)
+    T = T[:5000]
 
-    print('Tree built')
+    trie = SuffixTrie(T)
+
+    print('Trie built')
 
     if args.query:
         for query in args.query:
-            match_len = search_trie(trie, query)
+            match_len = trie.align(query)
             print(f'{query} : {match_len}')
 
 if __name__ == '__main__':
