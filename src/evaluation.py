@@ -158,7 +158,7 @@ def main():
     print(f'READING DATASETS')
     datasets = [utils.read_fasta(dataset)[0] for dataset in args.reference]
     datasets_name = [dataset[0] for dataset in datasets]
-    datasets_content = [dataset[1] for dataset in datasets]
+    datasets_content = [dataset[1][:5000] for dataset in datasets]
     print(f'DATASETS READ')
 
     unique_queries_per_size = args.queries_per_size

@@ -41,11 +41,11 @@ class SuffixTrie():
 
         nodes = [ ['', {}] ]
 
-        for i in reversed(range(len(s))):
-            suf = s[i:]
+        for suf_offset in reversed(range(len(s))):
+            # suf = s[i:]
             node_index, char_index = 0, 0
-            while char_index < len(suf):
-                curr_char = suf[char_index]
+            while char_index < len(s)-suf_offset:
+                curr_char = s[char_index+suf_offset]
                 if curr_char not in nodes[node_index][self.CHILDREN]:
                     new_node_index = len(nodes)
                     nodes.append([curr_char, {}])
